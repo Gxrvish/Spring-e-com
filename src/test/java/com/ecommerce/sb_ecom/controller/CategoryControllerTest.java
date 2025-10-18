@@ -37,6 +37,7 @@ class CategoryControllerTest {
         private CategoryController categoryController;
 
         @BeforeEach
+        @SuppressWarnings("unused")
         void setUp() {
                 MockitoAnnotations.openMocks(this);
                 mockMvc = MockMvcBuilders.standaloneSetup(categoryController)

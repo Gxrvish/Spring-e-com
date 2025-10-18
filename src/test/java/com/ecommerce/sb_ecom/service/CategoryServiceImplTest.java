@@ -28,6 +28,7 @@ class CategoryServiceImplTest {
     private CategoryServiceImpl categoryService;
 
     @BeforeEach
+    @SuppressWarnings("unused")
     void setUp() {
         MockitoAnnotations.openMocks(this);
     }
