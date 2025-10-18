@@ -33,7 +33,7 @@ class CategoryControllerTest {
         private MockMvc mockMvc;
 
         @MockitoBean
-        private CategoryService categoryService; // mock service layer
+        private CategoryService categoryService;
 
         @Test
         void testGetAllCategories() throws Exception {
@@ -53,8 +53,6 @@ class CategoryControllerTest {
 
         @Test
         void testCreateCategory() throws Exception {
-                Category category = createCategory(null, "Fashion");
-
                 mockMvc.perform(post("/api/public/categories")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("{\"categoryName\": \"Fashion\"}"))
@@ -67,11 +65,11 @@ class CategoryControllerTest {
         @Test
         void testDeleteCategory_Success() throws Exception {
                 when(categoryService.deleteCategory(1L))
-                                .thenReturn("Category with categoryId: 1 deleted successfully");
+                                .thenReturn("Category with ID: 1 deleted successfully");
 
                 mockMvc.perform(delete("/api/admin/categories/1"))
                                 .andExpect(status().isOk())
-                                .andExpect(content().string("Category with categoryId: 1 deleted successfully"));
+                                .andExpect(content().string("Category with ID: 1 deleted successfully"));
 
                 verify(categoryService, times(1)).deleteCategory(1L);
         }
@@ -97,6 +95,7 @@ class CategoryControllerTest {
                                 .content("{\"categoryName\": \"Updated Name\"}"))
                                 .andExpect(status().isOk())
                                 .andExpect(content().string("Category with categoryId: 1 is updated"));
+                verify(categoryService, times(1)).updateCategory(eq(1L), any(Category.class));
         }
 
         @Test

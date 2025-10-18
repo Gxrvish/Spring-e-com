@@ -1,86 +1,119 @@
 package com.ecommerce.sb_ecom.service;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.web.server.ResponseStatusException;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import org.mockito.MockitoAnnotations;
 
+import com.ecommerce.sb_ecom.exceptions.ResourceNotFoundException;
 import com.ecommerce.sb_ecom.model.Category;
+import com.ecommerce.sb_ecom.repositories.CategoryRepository;
 
 class CategoryServiceImplTest {
 
+    @Mock
+    private CategoryRepository categoryRepository;
+
+    @InjectMocks
     private CategoryServiceImpl categoryService;
 
     @BeforeEach
     void setUp() {
-        categoryService = new CategoryServiceImpl();
+        MockitoAnnotations.openMocks(this);
     }
 
     @Test
-    void testCreateCategoryAndGetAll() {
+    void testGetAllCategories() {
+        List<Category> categories = new ArrayList<>();
         Category category = new Category();
+        category.setCategoryId(1L);
         category.setCategoryName("Electronics");
+        categories.add(category);
+
+        when(categoryRepository.findAll()).thenReturn(categories);
+
+        List<Category> result = categoryService.getAllCategories();
+
+        assertEquals(1, result.size());
+        assertEquals("Electronics", result.get(0).getCategoryName());
+    }
+
+    @Test
+    void testCreateCategory() {
+        Category category = new Category();
+        category.setCategoryName("Books");
+
+        when(categoryRepository.save(category)).thenReturn(category);
 
         categoryService.createCategory(category);
 
-        List<Category> categories = categoryService.getAllCategories();
-        assertEquals(1, categories.size());
-        assertEquals("Electronics", categories.get(0).getCategoryName());
-        assertNotNull(categories.get(0).getCategoryId());
+        verify(categoryRepository, times(1)).save(category);
     }
 
     @Test
     void testDeleteCategory_Success() {
         Category category = new Category();
-        category.setCategoryName("Books");
-        categoryService.createCategory(category);
+        category.setCategoryId(1L);
+        category.setCategoryName("Fashion");
 
-        Long id = categoryService.getAllCategories().get(0).getCategoryId();
-        String message = categoryService.deleteCategory(id);
+        when(categoryRepository.findById(1L)).thenReturn(Optional.of(category));
 
-        assertEquals("Category with categoryId: " + id + " deleted successfully", message);
-        assertTrue(categoryService.getAllCategories().isEmpty());
+        String result = categoryService.deleteCategory(1L);
+
+        verify(categoryRepository, times(1)).delete(category);
+        assertEquals("Category with ID: 1 deleted successfully", result);
     }
 
     @Test
     void testDeleteCategory_NotFound() {
-        ResponseStatusException exception = assertThrows(
-                ResponseStatusException.class,
-                () -> categoryService.deleteCategory(99L)
-        );
-        assertEquals("404 NOT_FOUND \"Resource not found\"", exception.getMessage());
+        when(categoryRepository.findById(99L)).thenReturn(Optional.empty());
+
+        ResourceNotFoundException exception = assertThrows(
+                ResourceNotFoundException.class,
+                () -> categoryService.deleteCategory(99L));
+
+        assertEquals("Category not found with categoryId: 99", exception.getMessage());
     }
 
     @Test
     void testUpdateCategory_Success() {
-        Category category = new Category();
-        category.setCategoryName("Old Name");
-        categoryService.createCategory(category);
+        Category existingCategory = new Category();
+        existingCategory.setCategoryId(1L);
+        existingCategory.setCategoryName("Old Name");
 
-        Long id = categoryService.getAllCategories().get(0).getCategoryId();
-        Category updated = new Category();
-        updated.setCategoryName("New Name");
+        Category updatedCategory = new Category();
+        updatedCategory.setCategoryName("New Name");
 
-        Category result = categoryService.updateCategory(id, updated);
+        when(categoryRepository.findById(1L)).thenReturn(Optional.of(existingCategory));
+        when(categoryRepository.save(existingCategory)).thenReturn(existingCategory);
+
+        Category result = categoryService.updateCategory(1L, updatedCategory);
 
         assertEquals("New Name", result.getCategoryName());
-        assertEquals(id, result.getCategoryId());
+        verify(categoryRepository, times(1)).save(existingCategory);
     }
 
     @Test
     void testUpdateCategory_NotFound() {
-        Category updated = new Category();
-        updated.setCategoryName("Nonexistent");
+        Category updatedCategory = new Category();
+        updatedCategory.setCategoryName("Nonexistent");
 
-        ResponseStatusException exception = assertThrows(
-                ResponseStatusException.class,
-                () -> categoryService.updateCategory(123L, updated)
-        );
-        assertEquals("404 NOT_FOUND \"Resource not found\"", exception.getMessage());
+        when(categoryRepository.findById(123L)).thenReturn(Optional.empty());
+
+        ResourceNotFoundException exception = assertThrows(
+                ResourceNotFoundException.class,
+                () -> categoryService.updateCategory(123L, updatedCategory));
+
+        assertEquals("Category not found with categoryId: 123", exception.getMessage());
     }
 }
