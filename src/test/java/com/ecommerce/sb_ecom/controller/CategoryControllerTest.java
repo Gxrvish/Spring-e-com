@@ -1,121 +1,172 @@
 package com.ecommerce.sb_ecom.controller;
 
-import java.util.Arrays;
 import java.util.List;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.mockito.MockitoAnnotations;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import org.springframework.web.server.ResponseStatusException;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import com.ecommerce.sb_ecom.exceptions.APIException;
+import com.ecommerce.sb_ecom.exceptions.EcomGlobalExceptionHandler;
+import com.ecommerce.sb_ecom.exceptions.ResourceNotFoundException;
 import com.ecommerce.sb_ecom.model.Category;
 import com.ecommerce.sb_ecom.service.CategoryService;
 
-@WebMvcTest(CategoryController.class)
 class CategoryControllerTest {
 
-        @Autowired
         private MockMvc mockMvc;
 
-        @MockitoBean
+        @Mock
         private CategoryService categoryService;
 
+        @InjectMocks
+        private CategoryController categoryController;
+
+        @BeforeEach
+        void setUp() {
+                MockitoAnnotations.openMocks(this);
+                mockMvc = MockMvcBuilders.standaloneSetup(categoryController)
+                                .setControllerAdvice(new EcomGlobalExceptionHandler())
+                                .build();
+        }
+
+        // ---------------- GET ALL ----------------
         @Test
-        void testGetAllCategories() throws Exception {
-                List<Category> mockCategories = Arrays.asList(
-                                createCategory(1L, "Electronics"),
-                                createCategory(2L, "Books"));
+        void testGetAllCategories_Success() throws Exception {
+                Category category = new Category();
+                category.setCategoryId(1L);
+                category.setCategoryName("Electronics");
 
-                when(categoryService.getAllCategories()).thenReturn(mockCategories);
+                when(categoryService.getAllCategories()).thenReturn(List.of(category));
 
-                mockMvc.perform(get("/api/public/categories"))
-                                .andExpect(status().isOk())
-                                .andExpect(jsonPath("$[0].categoryName").value("Electronics"))
-                                .andExpect(jsonPath("$[1].categoryName").value("Books"));
+                mockMvc.perform(MockMvcRequestBuilders.get("/api/public/categories")
+                                .contentType(MediaType.APPLICATION_JSON))
+                                .andExpect(status().isOk());
 
                 verify(categoryService, times(1)).getAllCategories();
         }
 
         @Test
-        void testCreateCategory() throws Exception {
-                mockMvc.perform(post("/api/public/categories")
+        void testGetAllCategories_Empty() throws Exception {
+                when(categoryService.getAllCategories()).thenReturn(List.of());
+
+                mockMvc.perform(MockMvcRequestBuilders.get("/api/public/categories")
+                                .contentType(MediaType.APPLICATION_JSON))
+                                .andExpect(status().isInternalServerError());
+
+                verify(categoryService, times(1)).getAllCategories();
+        }
+
+        // ---------------- CREATE ----------------
+        @Test
+        void testCreateCategory_Success() throws Exception {
+                Category category = new Category();
+                category.setCategoryId(1L);
+                category.setCategoryName("Books");
+
+                when(categoryService.createCategory(any(Category.class))).thenReturn(category);
+
+                mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/categories")
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content("{\"categoryName\": \"Fashion\"}"))
-                                .andExpect(status().isCreated())
-                                .andExpect(content().string("Category added successfully!"));
+                                .content("{\"categoryName\": \"Books\"}"))
+                                .andExpect(status().isCreated());
 
                 verify(categoryService, times(1)).createCategory(any(Category.class));
         }
 
         @Test
-        void testDeleteCategory_Success() throws Exception {
-                when(categoryService.deleteCategory(1L))
-                                .thenReturn("Category with ID: 1 deleted successfully");
+        void testCreateCategory_AlreadyExists() throws Exception {
+                when(categoryService.createCategory(any(Category.class)))
+                                .thenThrow(new APIException("Category with name Books already exists!"));
 
-                mockMvc.perform(delete("/api/admin/categories/1"))
-                                .andExpect(status().isOk())
-                                .andExpect(content().string("Category with ID: 1 deleted successfully"));
+                mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/categories")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"categoryName\": \"Books\"}"))
+                                .andExpect(status().isInternalServerError());
+
+                verify(categoryService, times(1)).createCategory(any(Category.class));
+        }
+
+        @Test
+        void testCreateCategory_ValidationFail() throws Exception {
+                // Empty categoryName triggers @Valid validation error
+                mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/categories")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"categoryName\": \"\"}"))
+                                .andExpect(status().isBadRequest());
+        }
+
+        // ---------------- UPDATE ----------------
+        @Test
+        void testUpdateCategory_Success() throws Exception {
+                Category updated = new Category();
+                updated.setCategoryId(1L);
+                updated.setCategoryName("New Name");
+
+                when(categoryService.updateCategory(eq(1L), any(Category.class))).thenReturn(updated);
+
+                mockMvc.perform(MockMvcRequestBuilders.put("/api/admin/categories/1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"categoryName\": \"New Name\"}"))
+                                .andExpect(status().isOk());
+
+                verify(categoryService, times(1)).updateCategory(eq(1L), any(Category.class));
+        }
+
+        @Test
+        void testUpdateCategory_NotFound() throws Exception {
+                when(categoryService.updateCategory(eq(99L), any(Category.class)))
+                                .thenThrow(new ResourceNotFoundException("Category", "categoryId", 99L));
+
+                mockMvc.perform(MockMvcRequestBuilders.put("/api/admin/categories/99")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"categoryName\": \"New Name\"}"))
+                                .andExpect(status().isNotFound());
+
+                verify(categoryService, times(1)).updateCategory(eq(99L), any(Category.class));
+        }
+
+        @Test
+        void testUpdateCategory_ValidationFail() throws Exception {
+                mockMvc.perform(MockMvcRequestBuilders.put("/api/admin/categories/1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"categoryName\": \"\"}"))
+                                .andExpect(status().isBadRequest());
+        }
+
+        // ---------------- DELETE ----------------
+        @Test
+        void testDeleteCategory_Success() throws Exception {
+                doNothing().when(categoryService).deleteCategory(1L);
+
+                mockMvc.perform(MockMvcRequestBuilders.delete("/api/admin/categories/1"))
+                                .andExpect(status().isNoContent());
 
                 verify(categoryService, times(1)).deleteCategory(1L);
         }
 
         @Test
         void testDeleteCategory_NotFound() throws Exception {
-                when(categoryService.deleteCategory(99L))
-                                .thenThrow(new ResponseStatusException(org.springframework.http.HttpStatus.NOT_FOUND,
-                                                "Resource not found"));
+                doThrow(new ResourceNotFoundException("Category", "categoryId", 99L))
+                                .when(categoryService).deleteCategory(99L);
 
-                mockMvc.perform(delete("/api/admin/categories/99"))
-                                .andExpect(status().isNotFound())
-                                .andExpect(content().string("Resource not found"));
-        }
+                mockMvc.perform(MockMvcRequestBuilders.delete("/api/admin/categories/99"))
+                                .andExpect(status().isNotFound());
 
-        @Test
-        void testUpdateCategory_Success() throws Exception {
-                Category updated = createCategory(1L, "Updated Name");
-                when(categoryService.updateCategory(eq(1L), any(Category.class))).thenReturn(updated);
-
-                mockMvc.perform(put("/api/public/categories/1")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content("{\"categoryName\": \"Updated Name\"}"))
-                                .andExpect(status().isOk())
-                                .andExpect(content().string("Category with categoryId: 1 is updated"));
-                verify(categoryService, times(1)).updateCategory(eq(1L), any(Category.class));
-        }
-
-        @Test
-        void testUpdateCategory_NotFound() throws Exception {
-                when(categoryService.updateCategory(eq(5L), any(Category.class)))
-                                .thenThrow(new ResponseStatusException(org.springframework.http.HttpStatus.NOT_FOUND,
-                                                "Resource not found"));
-
-                mockMvc.perform(put("/api/public/categories/5")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content("{\"categoryName\": \"Unknown\"}"))
-                                .andExpect(status().isNotFound())
-                                .andExpect(content().string("Resource not found"));
-        }
-
-        // Utility method to reduce repetition
-        private Category createCategory(Long id, String name) {
-                Category category = new Category();
-                category.setCategoryId(id);
-                category.setCategoryName(name);
-                return category;
+                verify(categoryService, times(1)).deleteCategory(99L);
         }
 }

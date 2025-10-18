@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.ecommerce.sb_ecom.exceptions.APIException;
 import com.ecommerce.sb_ecom.exceptions.ResourceNotFoundException;
 import com.ecommerce.sb_ecom.model.Category;
 import com.ecommerce.sb_ecom.repositories.CategoryRepository;
@@ -21,29 +22,35 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public List<Category> getAllCategories() {
-        return categoryRepository.findAll();
+        List<Category> categories = categoryRepository.findAll();
+        if (categories.isEmpty()) {
+            throw new APIException("No categories found!");
+        }
+        return categories;
     }
 
     @Override
-    public void createCategory(Category category) {
-        categoryRepository.save(category);
+    public Category createCategory(Category category) {
+        Category existing = categoryRepository.findByCategoryName(category.getCategoryName());
+        if (existing != null) {
+            throw new APIException("Category already exists: " + category.getCategoryName());
+        }
+        return categoryRepository.save(category);
     }
 
     @Override
-    public String deleteCategory(Long categoryId) {
+    public void deleteCategory(Long categoryId) {
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new ResourceNotFoundException("Category", "categoryId", categoryId));
-
         categoryRepository.delete(category);
-        return "Category with ID: " + categoryId + " deleted successfully";
     }
 
     @Override
     public Category updateCategory(Long categoryId, Category updatedCategory) {
-        Category existingCategory = categoryRepository.findById(categoryId)
+        Category existing = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new ResourceNotFoundException("Category", "categoryId", categoryId));
 
-        existingCategory.setCategoryName(updatedCategory.getCategoryName());
-        return categoryRepository.save(existingCategory);
+        existing.setCategoryName(updatedCategory.getCategoryName());
+        return categoryRepository.save(existing);
     }
 }

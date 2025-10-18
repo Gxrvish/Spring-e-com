@@ -1,6 +1,7 @@
 package com.ecommerce.sb_ecom.controller;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +15,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.ecommerce.sb_ecom.dto.ApiResponse;
+import com.ecommerce.sb_ecom.dto.CategoryDto;
+import com.ecommerce.sb_ecom.exceptions.NoCategoriesFoundException;
 import com.ecommerce.sb_ecom.model.Category;
 import com.ecommerce.sb_ecom.service.CategoryService;
 
@@ -30,34 +34,43 @@ public class CategoryController {
     }
 
     @GetMapping("/public/categories")
-    public ResponseEntity<List<Category>> getAllCategories() {
-        List<Category> categories = categoryService.getAllCategories();
-        return new ResponseEntity<>(categories, HttpStatus.OK);
+    public ResponseEntity<ApiResponse<List<CategoryDto>>> getAllCategories() {
+        List<CategoryDto> categories = categoryService.getAllCategories()
+                .stream()
+                .map(CategoryDto::fromEntity)
+                .collect(Collectors.toList());
+
+        if (categories.isEmpty()) {
+            throw new NoCategoriesFoundException();
+        }
+
+        return ResponseEntity.ok(new ApiResponse<>("Categories fetched successfully", categories));
     }
 
-    @PostMapping("/public/categories")
-    public ResponseEntity<String> createCategoryString(@Valid @RequestBody Category category) {
-        categoryService.createCategory(category);
-        return new ResponseEntity<>("Category added successfully!", HttpStatus.CREATED);
-    }
-
-    @DeleteMapping("/admin/categories/{categoryId}")
-    public ResponseEntity<String> deleteCategory(@PathVariable Long categoryId) {
+    @PostMapping("/admin/categories")
+    public ResponseEntity<ApiResponse<CategoryDto>> createCategory(@Valid @RequestBody Category category) {
         try {
-            String status = categoryService.deleteCategory(categoryId);
-            return new ResponseEntity<>(status, HttpStatus.OK);
-        } catch (ResponseStatusException e) {
-            return new ResponseEntity<>(e.getReason(), e.getStatusCode());
+            Category created = categoryService.createCategory(category);
+            return new ResponseEntity<>(
+                    new ApiResponse<>("Category created successfully", CategoryDto.fromEntity(created)),
+                    HttpStatus.CREATED);
+        } catch (RuntimeException ex) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Category already exists");
         }
     }
 
-    @PutMapping("/public/categories/{categoryId}")
-    public ResponseEntity<String> updateCategory(@PathVariable Long categoryId, @RequestBody Category updatedCategory) {
-        try {
-            categoryService.updateCategory(categoryId, updatedCategory);
-            return new ResponseEntity<>("Category with categoryId: " + categoryId + " is updated", HttpStatus.OK);
-        } catch (ResponseStatusException e) {
-            return new ResponseEntity<>(e.getReason(), e.getStatusCode());
-        }
+    @PutMapping("/admin/categories/{id}")
+    public ResponseEntity<ApiResponse<CategoryDto>> updateCategory(
+            @PathVariable Long id,
+            @Valid @RequestBody Category category) {
+
+        Category updated = categoryService.updateCategory(id, category);
+        return ResponseEntity.ok(new ApiResponse<>("Category updated successfully", CategoryDto.fromEntity(updated)));
+    }
+
+    @DeleteMapping("/admin/categories/{id}")
+    public ResponseEntity<Void> deleteCategory(@PathVariable Long id) {
+        categoryService.deleteCategory(id);
+        return ResponseEntity.noContent().build();
     }
 }

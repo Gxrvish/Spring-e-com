@@ -53,10 +53,12 @@ class CategoryServiceImplTest {
         Category category = new Category();
         category.setCategoryName("Books");
 
+        when(categoryRepository.findByCategoryName("Books")).thenReturn(null);
         when(categoryRepository.save(category)).thenReturn(category);
 
-        categoryService.createCategory(category);
+        Category created = categoryService.createCategory(category);
 
+        assertEquals("Books", created.getCategoryName());
         verify(categoryRepository, times(1)).save(category);
     }
 
@@ -68,10 +70,9 @@ class CategoryServiceImplTest {
 
         when(categoryRepository.findById(1L)).thenReturn(Optional.of(category));
 
-        String result = categoryService.deleteCategory(1L);
+        categoryService.deleteCategory(1L);
 
         verify(categoryRepository, times(1)).delete(category);
-        assertEquals("Category with ID: 1 deleted successfully", result);
     }
 
     @Test
