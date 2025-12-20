@@ -20,11 +20,12 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import com.ecommerce.sb_ecom.exceptions.APIException;
-import com.ecommerce.sb_ecom.exceptions.EcomGlobalExceptionHandler;
-import com.ecommerce.sb_ecom.exceptions.ResourceNotFoundException;
-import com.ecommerce.sb_ecom.model.Category;
-import com.ecommerce.sb_ecom.service.CategoryService;
+import com.ecommerce.sb_ecom.category.controller.CategoryController;
+import com.ecommerce.sb_ecom.category.exception.EcomGlobalExceptionHandler;
+import com.ecommerce.sb_ecom.category.model.Category;
+import com.ecommerce.sb_ecom.category.service.CategoryService;
+import com.ecommerce.sb_ecom.common.exception.APIException;
+import com.ecommerce.sb_ecom.common.exception.ResourceNotFoundException;
 
 class CategoryControllerTest {
 

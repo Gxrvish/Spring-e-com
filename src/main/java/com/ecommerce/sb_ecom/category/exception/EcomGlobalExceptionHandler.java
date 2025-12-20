@@ -1,4 +1,4 @@
-package com.ecommerce.sb_ecom.exceptions;
+package com.ecommerce.sb_ecom.category.exception;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -9,6 +9,10 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import com.ecommerce.sb_ecom.common.exception.APIException;
+import com.ecommerce.sb_ecom.common.exception.ErrorResponse;
+import com.ecommerce.sb_ecom.common.exception.ResourceNotFoundException;
 
 @RestControllerAdvice
 public class EcomGlobalExceptionHandler {

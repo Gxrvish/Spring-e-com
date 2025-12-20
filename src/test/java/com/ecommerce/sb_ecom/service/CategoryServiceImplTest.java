@@ -15,9 +15,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import org.mockito.MockitoAnnotations;
 
-import com.ecommerce.sb_ecom.exceptions.ResourceNotFoundException;
-import com.ecommerce.sb_ecom.model.Category;
-import com.ecommerce.sb_ecom.repositories.CategoryRepository;
+import com.ecommerce.sb_ecom.category.model.Category;
+import com.ecommerce.sb_ecom.category.repositories.CategoryRepository;
+import com.ecommerce.sb_ecom.category.service.CategoryServiceImpl;
+import com.ecommerce.sb_ecom.common.exception.ResourceNotFoundException;
 
 class CategoryServiceImplTest {
 

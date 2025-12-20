@@ -1,4 +1,4 @@
-package com.ecommerce.sb_ecom.controller;
+package com.ecommerce.sb_ecom.category.controller;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -15,11 +15,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-import com.ecommerce.sb_ecom.dto.ApiResponse;
-import com.ecommerce.sb_ecom.dto.CategoryDto;
-import com.ecommerce.sb_ecom.exceptions.NoCategoriesFoundException;
-import com.ecommerce.sb_ecom.model.Category;
-import com.ecommerce.sb_ecom.service.CategoryService;
+import com.ecommerce.sb_ecom.category.dto.CategoryDto;
+import com.ecommerce.sb_ecom.category.exception.NoCategoriesFoundException;
+import com.ecommerce.sb_ecom.category.model.Category;
+import com.ecommerce.sb_ecom.category.service.CategoryService;
+import com.ecommerce.sb_ecom.common.dto.ApiResponse;
 
 import jakarta.validation.Valid;
 

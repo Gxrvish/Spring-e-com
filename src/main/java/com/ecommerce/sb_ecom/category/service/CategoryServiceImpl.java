@@ -1,14 +1,14 @@
-package com.ecommerce.sb_ecom.service;
+package com.ecommerce.sb_ecom.category.service;
 
 import java.util.List;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.ecommerce.sb_ecom.exceptions.APIException;
-import com.ecommerce.sb_ecom.exceptions.ResourceNotFoundException;
-import com.ecommerce.sb_ecom.model.Category;
-import com.ecommerce.sb_ecom.repositories.CategoryRepository;
+import com.ecommerce.sb_ecom.category.model.Category;
+import com.ecommerce.sb_ecom.category.repositories.CategoryRepository;
+import com.ecommerce.sb_ecom.common.exception.APIException;
+import com.ecommerce.sb_ecom.common.exception.ResourceNotFoundException;
 
 @Service
 @Transactional

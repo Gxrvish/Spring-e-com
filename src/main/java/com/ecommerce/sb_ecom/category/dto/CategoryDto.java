@@ -1,6 +1,6 @@
-package com.ecommerce.sb_ecom.dto;
+package com.ecommerce.sb_ecom.category.dto;
 
-import com.ecommerce.sb_ecom.model.Category;
+import com.ecommerce.sb_ecom.category.model.Category;
 
 public record CategoryDto(Long categoryId, String categoryName) {
     public static CategoryDto fromEntity(Category category) {

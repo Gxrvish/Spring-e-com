@@ -1,4 +1,4 @@
-package com.ecommerce.sb_ecom.exceptions;
+package com.ecommerce.sb_ecom.common.exception;
 
 import java.time.Instant;
 

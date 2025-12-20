@@ -1,4 +1,4 @@
-package com.ecommerce.sb_ecom.exceptions;
+package com.ecommerce.sb_ecom.common.exception;
 
 /**
  * Custom exception to handle cases where a requested resource is not found.

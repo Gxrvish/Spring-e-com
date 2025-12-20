@@ -1,4 +1,4 @@
-package com.ecommerce.sb_ecom.exceptions;
+package com.ecommerce.sb_ecom.category.exception;
 
 public class NoCategoriesFoundException extends RuntimeException {
     public NoCategoriesFoundException() {
