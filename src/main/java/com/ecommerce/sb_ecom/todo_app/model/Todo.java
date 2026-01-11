@@ -32,6 +32,7 @@ public class Todo {
 
     @NotBlank(message = "Todo name must not be blank")
     @Size(min = 3, message = "Todo name must contain atleast 3 characters")
+    @Column(unique = true)
     private String todoName;
 
     private String todoDescription;

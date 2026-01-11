@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -14,7 +15,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
 
 import com.ecommerce.sb_ecom.common.dto.ApiResponse;
 import com.ecommerce.sb_ecom.todo_app.dto.TodoDto;
@@ -25,8 +25,8 @@ import com.ecommerce.sb_ecom.todo_app.service.TodoService;
 import jakarta.validation.Valid;
 
 
-
 @RestController
+@ControllerAdvice
 @RequestMapping("/api")
 public class TodoController {
 
@@ -54,14 +54,10 @@ public class TodoController {
 
     @PostMapping("/admin/todos")
     public ResponseEntity<ApiResponse<TodoDto>> createTodo(@Valid @RequestBody Todo todo) {
-        try {
-            Todo created = todoService.createTodo(todo);
-            return new ResponseEntity<>(
-                    new ApiResponse<>("Todo created successfully", TodoDto.fromEntity(created)),
-                    HttpStatus.CREATED);
-        } catch (RuntimeException e) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Todo already exists");
-        }
+        Todo created = todoService.createTodo(todo);
+        return new ResponseEntity<>(
+                new ApiResponse<>("Todo created successfully", TodoDto.fromEntity(created)),
+                HttpStatus.CREATED);
     }
 
     @PutMapping("/admin/todos/{id}")

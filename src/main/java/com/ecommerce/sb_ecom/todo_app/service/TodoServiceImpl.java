@@ -4,16 +4,15 @@ import java.time.Instant;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.ecommerce.sb_ecom.common.exception.APIException;
 import com.ecommerce.sb_ecom.common.exception.ResourceNotFoundException;
 import com.ecommerce.sb_ecom.todo_app.model.Todo;
 import com.ecommerce.sb_ecom.todo_app.repositories.TodoRepository;
 
-import jakarta.transaction.Transactional;
 
 @Service
-@Transactional
 public class TodoServiceImpl implements TodoService {
 
     private final TodoRepository todoRepository;
@@ -22,6 +21,7 @@ public class TodoServiceImpl implements TodoService {
         this.todoRepository = todoRepository;
     }
 
+    @Transactional(readOnly = true)
     @Override
     public List<Todo> getAllTodos(Boolean onlyCompleted) {
         List<Todo> todos;
@@ -39,6 +39,7 @@ public class TodoServiceImpl implements TodoService {
         return todos;
     }
 
+    @Transactional
     @Override
     public Todo createTodo(Todo todo) {
         Todo existing = todoRepository.findByTodoName(todo.getTodoName());
@@ -48,6 +49,7 @@ public class TodoServiceImpl implements TodoService {
         return todoRepository.save(todo);
     }
 
+    @Transactional
     @Override
     public Todo updateTodo(Long todoId, Todo updatedTodo) {
         Todo existing = todoRepository.findById(todoId)
@@ -59,6 +61,7 @@ public class TodoServiceImpl implements TodoService {
         return todoRepository.save(existing);
     }
 
+    @Transactional
     @Override
     public void deleteTodo(Long todoId) {
         Todo todo = todoRepository.findById(todoId)
