@@ -2,27 +2,23 @@ package com.ecommerce.sb_ecom.todo_app.model;
 
 import java.time.Instant;
 
+import jakarta.persistence.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Entity
 @Table(name = "todo")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@EntityListeners(AuditingEntityListener.class)
 public class Todo {
 
     @Id
@@ -37,6 +33,7 @@ public class Todo {
 
     private String todoDescription;
     private boolean isCompleted;
+    private Long estimatedDuration;
 
     @CreatedDate
     @Column(nullable = false, updatable = false)
@@ -45,7 +42,6 @@ public class Todo {
     @PrePersist
     protected void onCreate() {
         this.isCompleted = false;
-        this.createdAt = Instant.now();
     }
 
     @LastModifiedDate

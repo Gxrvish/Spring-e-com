@@ -3,6 +3,10 @@ package com.ecommerce.sb_ecom.todo_app.controller;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.ecommerce.sb_ecom.todo_app.dto.TodoSearchRequest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -73,5 +77,22 @@ public class TodoController {
     public ResponseEntity<ApiResponse<TodoDto>> deleteTodo(@PathVariable Long id) {
         todoService.deleteTodo(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<Page<TodoDto>> searchTodos(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Boolean isCompleted,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+
+        TodoSearchRequest filters = new TodoSearchRequest();
+        filters.setKeyword(keyword);
+        filters.setIsCompleted(isCompleted);
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<TodoDto> result = todoService.searchTodos(filters, pageable);
+
+        return ResponseEntity.ok(result);
     }
 }
